@@ -11,12 +11,19 @@
 #define TXD BIT2
 #define RXD BIT1
 
+const char* kEot = "\004\n";
+
+enum UartCommand {
+  kStart = 'a',
+  kStop = 'b'
+};
+
 void ConfigureClocks();
 void ConfigurePorts();
 void ConfigureUart();
 void ConfigureTimer();
 
-char timer_count = 50;
+volatile UartCommand current_command = kStop;
 
 UartQueue uart_queue;
 
@@ -77,6 +84,7 @@ void ConfigureUart() {
   UCA0BR1 = 0x00; // 1MHz 115200.
   UCA0MCTL = UCBRS2 + UCBRS0; // Modulation UCBRSx = 5.
   UCA0CTL1 &= ~UCSWRST; // Initialize USCI state machine.
+  UC0IE |= UCA0RXIE; // Enable USCI_A0 RX interrupt.
 }
 
 void ConfigureTimer() {
@@ -86,9 +94,31 @@ void ConfigureTimer() {
   TA1CTL = TASSEL_2 + ID_0 + MC_1;
 }
 
+#pragma vector=USCIAB0RX_VECTOR
+__interrupt void USCI0RX_ISR(void) {
+  if (UCA0RXBUF == kStart) {
+    current_command = kStart;
+  } else if (UCA0RXBUF == kStop) {
+    current_command = kStop;
+
+    // Add end of transmission (EOT) character to the queue.
+    uart_queue.Push(kEot);
+
+    // Wake up from LPM so the EOT char can be transmitted.
+    LPM0_EXIT;
+  } else {
+    // Received character isn't a valid command.
+    // TODO(jmtaber129): Add invalid command error handling.
+  }
+}
+
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void Timer_A (void) {
-  ++timer_count;
+  if (current_command == kStop) {
+    // If the current command is STOP, don't take any measurements, and just
+    // return.
+    return;
+  }
 
   // Toggle P1.0 for debugging purposes.
   P1OUT ^= BIT0;
