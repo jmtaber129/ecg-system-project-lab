@@ -58,9 +58,8 @@ int main(void) {
 
 void ConfigureClocks() {
   WDTCTL = WDTPW + WDTHOLD; // Stop WDT.
-  DCOCTL = 0; // Select lowest DCOx and MODx settings.
-  BCSCTL1 = CALBC1_1MHZ; // Set DCO.
   DCOCTL = CALDCO_1MHZ;
+  BCSCTL1 = CALBC1_1MHZ; // Set DCO.
 }
 
 void ConfigurePorts() {
@@ -81,17 +80,14 @@ void ConfigureUart() {
 }
 
 void ConfigureTimer() {
-  // TODO(jmtaber129): Change this to generate an interrupt every 2.778ms
-  // (360Hz) for analog readings.
-  TA1CCR0 = 65535;
+  // Configure timer for 360Hz.
+  TA1CCR0 = 2778;  // Generate an interrupt every 2.778ms.
   TA1CCTL0 = CCIE;
-  TA1CTL = TASSEL_2+ID_3+MC_1;
+  TA1CTL = TASSEL_2 + ID_0 + MC_1;
 }
 
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void Timer_A (void) {
-  TA1CTL &= ~TAIFG;
-
   ++timer_count;
 
   // Toggle P1.0 for debugging purposes.
@@ -101,7 +97,7 @@ __interrupt void Timer_A (void) {
   // the serialized reading to the queue.
 
   char buffer[10];
-  buffer[0] = timer_count;
+  buffer[0] = 'a';
   buffer[1] = '\n';
   buffer[2] = '\0';
   uart_queue.Push(buffer);
