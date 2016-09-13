@@ -11,37 +11,20 @@
 #define TXD BIT2
 #define RXD BIT1
 
+void ConfigureClocks();
+void ConfigurePorts();
+void ConfigureUart();
+void ConfigureTimer();
+
 char timer_count = 50;
 
 UartQueue uart_queue;
 
 int main(void) {
-  WDTCTL = WDTPW + WDTHOLD; // Stop WDT.
-  DCOCTL = 0; // Select lowest DCOx and MODx settings.
-  BCSCTL1 = CALBC1_1MHZ; // Set DCO.
-  DCOCTL = CALDCO_1MHZ;
-
-  // Set up ports.
-  P2DIR |= 0xFF; // All P2.x outputs.
-  P2OUT &= 0x00; // All P2.x reset.
-  P1SEL |= RXD + TXD ; // P1.1 = RXD, P1.2=TXD.
-  P1SEL2 |= RXD + TXD ; // P1.1 = RXD, P1.2=TXD.
-  P1DIR |= RXLED + TXLED;
-  P1OUT &= 0x00;
-
-  // Set up UART.
-  UCA0CTL1 |= UCSSEL_2; // SMCLK.
-  UCA0BR0 = 0x08; // 1MHz 115200.
-  UCA0BR1 = 0x00; // 1MHz 115200.
-  UCA0MCTL = UCBRS2 + UCBRS0; // Modulation UCBRSx = 5.
-  UCA0CTL1 &= ~UCSWRST; // Initialize USCI state machine.
-
-  // Setup TimerA1.
-  // TODO(jmtaber129): Change this to generate an interrupt every 2.778ms
-  // (360Hz) for analog readings.
-  TA1CCR0 = 65535;
-  TA1CCTL0 = CCIE;
-  TA1CTL = TASSEL_2+ID_3+MC_1;
+  ConfigureClocks();
+  ConfigurePorts();
+  ConfigureUart();
+  ConfigureTimer();
 
   __bis_SR_register(GIE);
 
@@ -71,6 +54,38 @@ int main(void) {
     }
 
   }
+}
+
+void ConfigureClocks() {
+  WDTCTL = WDTPW + WDTHOLD; // Stop WDT.
+  DCOCTL = 0; // Select lowest DCOx and MODx settings.
+  BCSCTL1 = CALBC1_1MHZ; // Set DCO.
+  DCOCTL = CALDCO_1MHZ;
+}
+
+void ConfigurePorts() {
+  P2DIR |= 0xFF; // All P2.x outputs.
+  P2OUT &= 0x00; // All P2.x reset.
+  P1SEL |= RXD + TXD ; // P1.1 = RXD, P1.2=TXD.
+  P1SEL2 |= RXD + TXD ; // P1.1 = RXD, P1.2=TXD.
+  P1DIR |= RXLED + TXLED;
+  P1OUT &= 0x00;
+}
+
+void ConfigureUart() {
+  UCA0CTL1 |= UCSSEL_2; // SMCLK.
+  UCA0BR0 = 0x08; // 1MHz 115200.
+  UCA0BR1 = 0x00; // 1MHz 115200.
+  UCA0MCTL = UCBRS2 + UCBRS0; // Modulation UCBRSx = 5.
+  UCA0CTL1 &= ~UCSWRST; // Initialize USCI state machine.
+}
+
+void ConfigureTimer() {
+  // TODO(jmtaber129): Change this to generate an interrupt every 2.778ms
+  // (360Hz) for analog readings.
+  TA1CCR0 = 65535;
+  TA1CCTL0 = CCIE;
+  TA1CTL = TASSEL_2+ID_3+MC_1;
 }
 
 #pragma vector=TIMER1_A0_VECTOR
