@@ -1,10 +1,7 @@
 #include "uart-queue.h"
 
 #include <msp430g2553.h>
-#include <string>
 #include <stdio.h>
-#include <stdlib.h>
-#include <sstream>
 
 #define TXLED BIT0
 #define RXLED BIT6
