@@ -21,10 +21,12 @@ class UartQueue {
     int Size();
 
     // Returns the first element in the queue.
-    const char* Front();
+    char Front();
 
     // Copies and inserts the string 'data' at the end of the queue.
     void Push(const char* data);
+
+    void Push(char data);
 
     // Removes the first element in the queue.
     void Pop();
@@ -34,10 +36,10 @@ class UartQueue {
     // streamed and popped almost immediately, this doesn't need to be too
     // large.
     // TODO(jmtaber129): Make this bigger for phase 2.
-    static const unsigned int kBufferSize = 10;
+    static const unsigned int kBufferSize = 100;
 
     // Used to store c-strings in the queue.
-    char circular_buffer_[kBufferSize][kBufferSize];
+    char circular_buffer_[kBufferSize];
 
     // The index of the front of the queue.
     unsigned int front_index_;

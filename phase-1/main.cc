@@ -38,20 +38,14 @@ int main(void) {
   // Serial data-streaming loop.
   while (1) {
     if (!uart_queue.Empty()) {
-      // Get the next string to send.
-      const char* current_char = uart_queue.Front();
+      // Get the next char to send.
+      char current_char = uart_queue.Front();
 
-      // Iterate through the string until a NULL char is encountered.
-      while(*current_char != '\0') {
-        // Wait for the transmit buffer to be ready.
-        while (!(IFG2 & UCA0TXIFG));
+      // Wait for the transmit buffer to be ready.
+      while (!(IFG2 & UCA0TXIFG));
 
-        // Load the char into the buffer.
-        UCA0TXBUF = *current_char;
-
-        // Move to the next char.
-        ++current_char;
-      }
+      // Load the char into the buffer.
+      UCA0TXBUF = current_char;
 
       // Remove the string we just sent from the queue.
       uart_queue.Pop();
