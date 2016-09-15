@@ -22,8 +22,10 @@ void ConfigureClocks();
 void ConfigurePorts();
 void ConfigureUart();
 void ConfigureTimer();
+void ConfigureAdc(int* dtc_address);
 
 volatile UartCommand current_command = kStop;
+int adc_sample = 0;
 
 UartQueue uart_queue;
 
@@ -31,6 +33,7 @@ int main(void) {
   ConfigureClocks();
   ConfigurePorts();
   ConfigureUart();
+  ConfigureAdc(&adc_sample);
   ConfigureTimer();
 
   __bis_SR_register(GIE);
@@ -66,7 +69,7 @@ void ConfigureClocks() {
 void ConfigurePorts() {
   P2DIR |= 0xFF; // All P2.x outputs.
   P2OUT &= 0x00; // All P2.x reset.
-  P1SEL |= RXD + TXD ; // P1.1 = RXD, P1.2=TXD.
+  P1SEL |= RXD + TXD + BIT5; // P1.1 = RXD, P1.2 = TXD. P1.5 = ADC.
   P1SEL2 |= RXD + TXD ; // P1.1 = RXD, P1.2=TXD.
   P1DIR |= RXLED + TXLED;
   P1OUT &= 0x00;
@@ -86,6 +89,17 @@ void ConfigureTimer() {
   TA1CCR0 = 2778;  // Generate an interrupt every 2.778ms.
   TA1CCTL0 = CCIE;
   TA1CTL = TASSEL_2 + ID_0 + MC_1;
+}
+
+void ConfigureAdc(int* dtc_address) {
+  ADC10CTL1 = INCH_10 + ADC10DIV_3;
+  ADC10CTL0 = SREF_1 + REFON + ADC10SHT_3 + ADC10ON + ADC10IE;
+  ADC10AE0 |= 0x80;
+  ADC10SA = (int)dtc_address;
+  ADC10DTC1 = 1;  // Only keep the latest sample.
+  ADC10DTC0 = ADC10CT + ADC10FETCH;
+  __delay_cycles(1000);  // Wait for the ADC reference to settle.
+  ADC10CTL0 |= ENC + ADC10SC;
 }
 
 #pragma vector=USCIAB0RX_VECTOR
@@ -117,13 +131,11 @@ __interrupt void Timer_A (void) {
   // Toggle P1.0 for debugging purposes.
   P1OUT ^= BIT0;
 
-  // TODO(jmtaber129): Read from the analog pin, serialize the reading, and add
-  // the serialized reading to the queue.
-
   char buffer[10];
-  buffer[0] = 'a';
-  buffer[1] = '\n';
-  buffer[2] = '\0';
+  ADC10CTL0 |= ENC + ADC10SC;      //enable conversion and start conversion
+  while(ADC10CTL1 & BUSY);
+  adc_sample = ADC10MEM;
+  sprintf(buffer, "%x\n", adc_sample);
   uart_queue.Push(buffer);
 
   // The string that was just pushed to the queue needs to be sent by the main
