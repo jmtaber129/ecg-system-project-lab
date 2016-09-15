@@ -1,5 +1,5 @@
-#ifndef UART_QUEUE_H_
-#define UART_QUEUE_H_
+#ifndef ECG_SYSTEM_PROJECT_LAB_UART_QUEUE_H_
+#define ECG_SYSTEM_PROJECT_LAB_UART_QUEUE_H_
 
 // A queue of c-strings. Used to queue up strings to be transmitted via UART.
 // NOTE: Because the implementation of the queue uses a buffer of a finite
@@ -49,4 +49,4 @@ class UartQueue {
     unsigned int back_index_;
 };
 
-#endif // UART_QUEUE_H_
+#endif // ECG_SYSTEM_PROJECT_LAB_UART_QUEUE_H_
