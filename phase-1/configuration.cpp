@@ -46,9 +46,9 @@ void Configuration::ConfigureTimer() {
 }
 
 void Configuration::ConfigureAdc(int* dtc_address) {
-  ADC10CTL1 = INCH_10 + ADC10DIV_3;
-  ADC10CTL0 = SREF_1 + REFON + ADC10SHT_3 + ADC10ON + ADC10IE;
-  ADC10AE0 |= 0x80;
+  ADC10CTL1 = INCH_3 + ADC10DIV_3;
+  ADC10CTL0 = SREF_0 + ADC10SHT_3 + ADC10ON + ADC10IE;
+  ADC10AE0 |= BIT3;
   ADC10SA = (int)dtc_address;
   ADC10DTC1 = 1;  // Only keep the latest sample.
   ADC10DTC0 = ADC10CT + ADC10FETCH;
