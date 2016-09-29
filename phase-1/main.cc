@@ -77,7 +77,7 @@ __interrupt void Timer_A (void) {
   ADC10CTL0 |= ENC + ADC10SC;      //enable conversion and start conversion
   while(ADC10CTL1 & BUSY);
   adc_sample = ADC10MEM;
-  sprintf(buffer, "%x\n", adc_sample);
+  sprintf(buffer, "%d\n", adc_sample);
   uart_queue.Push(buffer);
 
   // The string that was just pushed to the queue needs to be sent by the main
