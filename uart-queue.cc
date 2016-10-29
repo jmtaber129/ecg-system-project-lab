@@ -1,4 +1,4 @@
-#include "uart-queue.h"
+#include "../uart-queue.h"
 
 #include <stdlib.h>
 #include <string.h>

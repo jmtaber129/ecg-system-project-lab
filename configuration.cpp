@@ -1,4 +1,4 @@
-#include "configuration.h"
+#include "../configuration.h"
 
 #include <msp430g2553.h>
 

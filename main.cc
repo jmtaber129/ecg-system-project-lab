@@ -1,8 +1,7 @@
-#include "uart-queue.h"
-#include "configuration.h"
-
 #include <msp430g2553.h>
 #include <stdio.h>
+#include "../configuration.h"
+#include "../uart-queue.h"
 
 
 const char* kEot = "\004\n";
